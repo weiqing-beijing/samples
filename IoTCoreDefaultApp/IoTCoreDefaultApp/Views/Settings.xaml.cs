@@ -1,13 +1,16 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Windows.Devices.Bluetooth.Rfcomm;
 using Windows.Devices.Enumeration;
 using Windows.Devices.WiFi;
 using Windows.Foundation;
 using Windows.Security.Credentials;
+using Windows.Services.Cortana;
+using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -45,6 +48,9 @@ namespace IoTCoreDefaultApp
         private Windows.UI.Xaml.Controls.Button inProgressPairButton;
         Windows.UI.Xaml.Controls.Primitives.FlyoutBase savedPairButtonFlyout;
 
+        private bool needsCortanaConsent = false;
+        private bool cortanaConsentRequestedFromSwitch = false;
+
         static public ObservableCollection<BluetoothDeviceInformationDisplay> bluetoothDeviceObservableCollection
         {
             get;
@@ -61,11 +67,16 @@ namespace IoTCoreDefaultApp
 
             this.DataContext = LanguageManager.GetInstance();
 
-            this.Loaded += (sender, e) =>
+            this.Loaded += async (sender, e) =>
             {
-                SetupLanguages();
-                screensaverToggleSwitch.IsOn = Screensaver.IsScreensaverEnabled;
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    SetupLanguages();
+                    screensaverToggleSwitch.IsOn = Screensaver.IsScreensaverEnabled;
+                });
             };
+
+            Window.Current.Activated += Window_Activated;
         }
 
         private void SetupLanguages()
@@ -88,6 +99,31 @@ namespace IoTCoreDefaultApp
         {
             bluetoothDeviceListView.ItemsSource = bluetoothDeviceObservableCollection;
             RegisterForInboundPairingRequests();
+        }
+
+        private void SetupCortana()
+        {
+            var isCortanaSupported = CortanaSettings.IsSupported();
+            cortanaConsentRequestedFromSwitch = false;
+
+            // Only allow the Cortana settings to be enabled if Cortana is available on this device
+            CortanaVoiceActivationSwitch.IsEnabled = isCortanaSupported;
+            CortanaAboutMeButton.IsEnabled = isCortanaSupported;
+
+            // If Cortana is supported on this device and the user has never granted voice consent,
+            // then set a flag so that each time this page is activated we will poll for
+            // Cortana's Global Consent Value and update the UI if needed.
+            if (isCortanaSupported)
+            {
+                var cortanaSettings = CortanaSettings.GetDefault();
+                needsCortanaConsent = !cortanaSettings.HasUserConsentToVoiceActivation;
+
+                // If consent isn't needed, then update the voice activation switch to reflect its current system state.
+                if (!needsCortanaConsent)
+                {
+                    CortanaVoiceActivationSwitch.IsOn = cortanaSettings.IsVoiceActivationEnabled;
+                }
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -227,9 +263,20 @@ namespace IoTCoreDefaultApp
         private async void SetupWifi()
         {
             if (await networkPresenter.WifiIsAvailable())
-            {    
-                var networks = await networkPresenter.GetAvailableNetworks();
-             
+            {
+                IList<WiFiAvailableNetwork> networks;
+                try
+                {
+                    networks = await networkPresenter.GetAvailableNetworks();
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(String.Format("Error scanning: 0x{0:X}: {1}", e.HResult, e.Message));
+                    NoWifiFoundText.Text = e.Message;
+                    NoWifiFoundText.Visibility = Visibility.Visible;
+                    return;
+                }
+
                 if (networks.Count > 0)
                 {
 
@@ -429,6 +476,15 @@ namespace IoTCoreDefaultApp
                         visibleContent.Visibility = Visibility.Collapsed;
                         BluetoothGrid.Visibility = Visibility.Visible;
                         visibleContent = BluetoothGrid;
+                    }
+                    break;
+                case "CortanaListViewItem":
+                    if (CortanaGrid.Visibility == Visibility.Collapsed)
+                    {
+                        SetupCortana();
+                        visibleContent.Visibility = Visibility.Collapsed;
+                        CortanaGrid.Visibility = Visibility.Visible;
+                        visibleContent = CortanaGrid;
                     }
                     break;
             }
@@ -837,7 +893,6 @@ namespace IoTCoreDefaultApp
         /// <param name="e"></param>
         private void PinEntryTextBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
         {
-
             if (e.Key == Windows.System.VirtualKey.Enter)
             {
                 //  Close the flyout and save the PIN the user entered
@@ -1006,6 +1061,120 @@ namespace IoTCoreDefaultApp
             {
                 passwordBox.Focus(FocusState.Programmatic);
             }
+        }
+
+        private void CortanaVoiceActivationSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            var cortanaSettings = CortanaSettings.GetDefault();
+            var cortanaVoiceActivationSwitch = (ToggleSwitch) sender;
+
+            bool enableVoiceActivation = cortanaVoiceActivationSwitch.IsOn;
+
+            // If user is requesting to turn on voice activation, but consent has not been provided yet, then launch Cortana to ask for consent first
+            if (!cortanaSettings.HasUserConsentToVoiceActivation)
+            {
+                // Guard against the case where the switch is toggled off when Consent hasn't been given yet
+                // This occurs when we are re-entering this method when the switch is turned off in the code that follows
+                if (!enableVoiceActivation)
+                {
+                    return;
+                }
+
+                // Launch Cortana to get the User Consent.  This is required before a change to enable voice activation is permitted
+                CortanaVoiceActivationSwitch.IsEnabled = false;
+                needsCortanaConsent = true;
+                CortanaVoiceActivationSwitch.IsOn = false;
+                cortanaConsentRequestedFromSwitch = true;
+                CortanaHelper.LaunchCortanaToConsentPageAsync();
+            }
+            // Otherwise, we already have consent, so just enable or disable the voice activation setting.
+            // Do this asynchronously because the API waits for the SpeechRuntime EXE to launch
+            else
+            {
+                CortanaVoiceActivationSwitch.IsEnabled = false;
+                Window.Current.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                {
+                    await SetVoiceActivation(enableVoiceActivation);
+                    CortanaVoiceActivationSwitch.IsEnabled = true;
+                });                
+            }
+        }
+
+        private void Window_Activated(object sender, WindowActivatedEventArgs e)
+        {
+            switch (e.WindowActivationState)
+            {
+                case CoreWindowActivationState.PointerActivated:
+                case CoreWindowActivationState.CodeActivated:
+                    if (needsCortanaConsent)
+                    {
+                        // Re-enable the voice activation selection
+                        CortanaVoiceActivationSwitch.IsEnabled = true;
+
+                        // Verify whether consent has changed while the screen was away
+                        var cortanaSettings = CortanaSettings.GetDefault();
+                        if (cortanaSettings.HasUserConsentToVoiceActivation)
+                        {
+                            // Consent was granted, so finish the task of flipping the switch to the current activation-state
+                            // (It is possible that Cortana Consent was granted by some other application, while
+                            // the default app was running, but not by the user actively flipping the switch,
+                            // so update the switch state to the current global setting)                           
+                            if (cortanaConsentRequestedFromSwitch)
+                            {
+                                SetVoiceActivation(true);
+                                cortanaConsentRequestedFromSwitch = false;
+                            }
+
+                            // Set the switch to the current global state
+                            CortanaVoiceActivationSwitch.IsOn = cortanaSettings.IsVoiceActivationEnabled;
+                            
+                            // We no longer need consent
+                            needsCortanaConsent = false;                            
+                        }
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        const int RPC_S_CALL_FAILED = -2147023170;
+        const int RPC_S_SERVER_UNAVAILABLE = -2147023174;
+        const int RPC_S_SERVER_TOO_BUSY = -2147023175;
+        const int MAX_VOICEACTIVATION_TRIALS = 5;
+        const int TIMEINTERVAL_VOICEACTIVATION = 10;    // milli sec
+        private async Task SetVoiceActivation(bool value)
+        {
+            var cortanaSettings = CortanaSettings.GetDefault();
+            for (int i = 0; i < MAX_VOICEACTIVATION_TRIALS; i++)
+            {
+                try
+                {
+                    cortanaSettings.IsVoiceActivationEnabled = value;
+                }
+                catch (System.Exception ex)
+                {
+                    if (ex.HResult == RPC_S_CALL_FAILED ||
+                        ex.HResult == RPC_S_SERVER_UNAVAILABLE ||
+                        ex.HResult == RPC_S_SERVER_TOO_BUSY)
+                    {
+                        // VoiceActivation server is very likely busy =>
+                        // yield and take a new ref to CortanaSettings API
+                        await Task.Delay(TimeSpan.FromMilliseconds(TIMEINTERVAL_VOICEACTIVATION));
+                        cortanaSettings = CortanaSettings.GetDefault();
+                    }
+                    else
+                    {
+                        throw ex;
+                    }
+                }
+            }
+        }
+
+        private void CortanaAboutMeButton_Click(object sender, RoutedEventArgs e)
+        {
+            CortanaHelper.LaunchCortanaToAboutMeAsync();
         }
     }
 }

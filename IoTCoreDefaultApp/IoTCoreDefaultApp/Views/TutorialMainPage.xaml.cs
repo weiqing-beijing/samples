@@ -4,6 +4,7 @@ using IoTCoreDefaultApp.Utils;
 using System;
 using System.Globalization;
 using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
@@ -32,20 +33,23 @@ namespace IoTCoreDefaultApp
 
             this.DataContext = LanguageManager.GetInstance();
 
-            this.Loaded += (sender, e) =>
-            {
-                UpdateBoardInfo();
-                UpdateDateTime();
+            timer = new DispatcherTimer();
+            timer.Tick += timer_Tick;
+            timer.Interval = TimeSpan.FromSeconds(30);
 
-                timer = new DispatcherTimer();
-                timer.Tick += timer_Tick;
-                timer.Interval = TimeSpan.FromSeconds(30);
-                timer.Start();
+            this.Loaded += async (sender, e) =>
+            {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    UpdateBoardInfo();
+                    UpdateDateTime();
+
+                    timer.Start();
+                });
             };
             this.Unloaded += (sender, e) =>
             {
                 timer.Stop();
-                timer = null;
             };
         }
 

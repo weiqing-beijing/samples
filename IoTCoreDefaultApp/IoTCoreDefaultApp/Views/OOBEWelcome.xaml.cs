@@ -29,24 +29,27 @@ namespace IoTCoreDefaultApp
 
             this.DataContext = LanguageManager.GetInstance();
 
-            this.Loaded += (sender, e) =>
+            timer = new DispatcherTimer();
+            timer.Tick += timer_Tick;
+            timer.Interval = TimeSpan.FromSeconds(60);
+
+            countdown = new DispatcherTimer();
+            countdown.Tick += countdown_Tick;
+            countdown.Interval = TimeSpan.FromMilliseconds(100);
+
+            this.Loaded += async (sender, e) =>
             {
-                SetupLanguages();
-                UpdateBoardInfo();
-                UpdateNetworkInfo();
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    SetupLanguages();
+                    UpdateBoardInfo();
+                    UpdateNetworkInfo();
 
-                timer = new DispatcherTimer();
-                timer.Tick += timer_Tick;
-                timer.Interval = TimeSpan.FromSeconds(60);
-                timer.Start();
-
-                countdown = new DispatcherTimer();
-                countdown.Tick += countdown_Tick;
-                countdown.Interval = TimeSpan.FromMilliseconds(100);
+                    timer.Start();
+                });
             };
 
             Unloaded += MainPage_Unloaded;
-
         }
 
         private void MainPage_Unloaded(object sender, RoutedEventArgs e)
@@ -116,6 +119,11 @@ namespace IoTCoreDefaultApp
 
             await Window.Current.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
+                // If the next screen is the main-page, navigate there, but also launch Cortana to its Consent Page independently
+                if (nextScreen == typeof(MainPage))
+                {
+                    CortanaHelper.LaunchCortanaToConsentPageAsyncIfNeeded();
+                }
                 NavigationUtils.NavigateToScreen(nextScreen);
             });
         }

@@ -11,7 +11,7 @@
     <AssemblyName>SpeechTranslator</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>
+    <TargetPlatformVersion>10.0.15063.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
     <UapDefaultAssetScale>100</UapDefaultAssetScale>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
@@ -21,7 +21,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <AppxBundle>Always</AppxBundle>
+    <AppxBundle>Never</AppxBundle>
     <AppxBundlePlatforms>arm</AppxBundlePlatforms>
     <PackageCertificateThumbprint>388246B2FE7053350055782D9825A22DD6E7492B</PackageCertificateThumbprint>
     <PackageCertificateKeyFile>SpeechTranslator_TemporaryKey.pfx</PackageCertificateKeyFile>
@@ -104,7 +104,7 @@
     <None Include="SpeechTranslator_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdmAuthentication.cs" />
+    <Compile Include="AzureAuthentication.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -140,9 +140,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <SDKReference Include="WindowsIoT, Version=10.0.10586.0">
+    <SDKReference Include="WindowsIoT, Version=10.0.15063.0">
       <Name>Windows IoT Extensions for the UWP</Name>
     </SDKReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

@@ -730,18 +730,67 @@
     <value>Não há suporte para alteração de diretório no momento. Use caminhos completos em seus comandos.</value>
   </data>
   <data name="CmdNotEnabled" xml:space="preserve">
-    <value>Seu dispositivo não tem permissão para executar o processador de linha de comando.
-Para habilitá-lo, execute o seguinte comando como "Administrador" em seu dispositivo:
+    <value>Seu dispositivo não está habilitado para executar o processador de linha de comando.
+Para habilitá-lo, conecte-se ao seu dispositivo como "Administrador" (por exemplo, usando o PowerShell ou SSH) ou use o Windows Device Portal para executar este comando:
 
-    reg ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\EmbeddedMode\ProcessLauncher" /v AllowedExecutableFilesList /t REG_MULTI_SZ /d "c:\windows\system32\cmd.exe\0"
+    reg ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\EmbeddedMode\ProcessLauncher" /f /v AllowedExecutableFilesList /t REG_MULTI_SZ /d "c:\windows\system32\cmd.exe\0"
 
-Você pode executar o comando na página Processos do Windows Device Portal da IoT. Ou use o PowerShell para se conectar ao seu dispositivo Windows IoT.
-Para obter mais informações, visite http://go.microsoft.com/fwlink/p/?LinkId=698488
+Você também pode clicar ou tocar no botão abaixo para inserir a senha da sua conta de Administrador e tentar habilitar o processador de linha de comando.
+
     </value>
     <comment>New lines need to be preserved</comment>
   </data>
   <data name="ExecAsDefaultAccount" xml:space="preserve">
     <value>Executando comandos como DefaultAccount
     </value>
+  </data>
+  <data name="CloseText" xml:space="preserve">
+    <value>Fechar</value>
+  </data>
+  <data name="EnableCmdText" xml:space="preserve">
+    <value>Habilitar o Processador de Linha de Comando</value>
+  </data>
+  <data name="UsernameText" xml:space="preserve">
+    <value>Nome de Usuário</value>
+  </data>
+  <data name="PasswordText" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="CmdTextEnabledSuccess" xml:space="preserve">
+    <value>O Processador de Linha de Comando (cmd.exe) foi habilitado com êxito o no seu dispositivo.</value>
+  </data>
+  <data name="CmdTextEnabledFailure" xml:space="preserve">
+    <value>Falha ao habilitar o Processador de Linha de Comando (cmd.exe) em seu dispositivo. Status = {0}</value>
+  </data>
+  <data name="DisconnectButtonContent" xml:space="preserve">
+    <value>Desconectar</value>
+    <comment>This disconnects the connected network</comment>
+  </data>
+  <data name="VirtualNetworkAdapter" xml:space="preserve">
+    <value>Adaptador de Rede Virtual</value>
+  </data>
+  <data name="CortanaAboutMeText" xml:space="preserve">
+    <value>Sobre mim</value>
+    <comment>Button launches Cortana's "About Me" page to manage certain Cortana Settings</comment>
+  </data>
+  <data name="CortanaTitleText" xml:space="preserve">
+    <value>Gerenciar as Configurações da Cortana</value>
+    <comment>Title of Cortana Settings Management Page</comment>
+  </data>
+  <data name="CortanaPreferencesText" xml:space="preserve">
+    <value>Cortana</value>
+    <comment>Cortana Preferences on left side of settings screen</comment>
+  </data>
+  <data name="CortanaVoiceActivationText" xml:space="preserve">
+    <value>Permitir que a Cortana responda a "Ei Cortana"</value>
+    <comment>Toggle switch for enabling voice activation.</comment>
+  </data>
+  <data name="ToggleOnText" xml:space="preserve">
+    <value>Ativado</value>
+    <comment>Text used in toggle switches for 'on' state.</comment>
+  </data>
+  <data name="ToggleOffText" xml:space="preserve">
+    <value>Desativado</value>
+    <comment>Text used in toggle switches for 'off' state.</comment>
   </data>
 </root>

@@ -50,22 +50,25 @@ namespace IoTCoreDefaultApp
 
             this.DataContext = LanguageManager.GetInstance();
 
-            this.Loaded += (sender, e) => 
-            {
-                UpdateBoardInfo();
-                UpdateNetworkInfo();
-                UpdateDateTime();
-                UpdateConnectedDevices();
+            timer = new DispatcherTimer();
+            timer.Tick += timer_Tick;
+            timer.Interval = TimeSpan.FromSeconds(10);
 
-                timer = new DispatcherTimer();
-                timer.Tick += timer_Tick;
-                timer.Interval = TimeSpan.FromSeconds(10);
-                timer.Start();
+            this.Loaded += async (sender, e) => 
+            {
+                await MainPageDispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    UpdateBoardInfo();
+                    UpdateNetworkInfo();
+                    UpdateDateTime();
+                    UpdateConnectedDevices();
+
+                    timer.Start();
+                });
             };
             this.Unloaded += (sender, e) =>
             {
                 timer.Stop();
-                timer = null;
             };
         }
 

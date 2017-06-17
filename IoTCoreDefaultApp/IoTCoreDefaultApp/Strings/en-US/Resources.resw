@@ -730,13 +730,13 @@
     <value>Change Directory not currently supported. Please use full paths in your commands.</value>
   </data>
   <data name="CmdNotEnabled" xml:space="preserve">
-    <value>Your device is not allowed to run the command line processor.
-To enable it, run the following command as "Administrator" on your device:
+    <value>Your device is not enabled to run the command line processor.
+To enable it, connect to your device as "Administrator" (e.g. using PowerShell or SSH) or use Windows Device Portal to run this command:
 
-    reg ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\EmbeddedMode\ProcessLauncher" /v AllowedExecutableFilesList /t REG_MULTI_SZ /d "c:\windows\system32\cmd.exe\0"
+    reg ADD "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\EmbeddedMode\ProcessLauncher" /f /v AllowedExecutableFilesList /t REG_MULTI_SZ /d "c:\windows\system32\cmd.exe\0"
 
-You can run the command in IoT Windows Device Portal's Processes page. Or use PowerShell to connect to your Windows IoT device.
-For more information, please visit http://go.microsoft.com/fwlink/p/?LinkId=698488
+Alternatively, click or tap the button below to enter your Administrator account's password and attempt to enable the command line processor.
+
     </value>
     <comment>New lines need to be preserved</comment>
   </data>
@@ -744,8 +744,53 @@ For more information, please visit http://go.microsoft.com/fwlink/p/?LinkId=6984
     <value>Executing commands as DefaultAccount
     </value>
   </data>
+  <data name="CloseText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="EnableCmdText" xml:space="preserve">
+    <value>Enable Command Line Processor</value>
+  </data>
+  <data name="UsernameText" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="PasswordText" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="CmdTextEnabledSuccess" xml:space="preserve">
+    <value>Successfully enabled Command Line Processor (cmd.exe) on your device.</value>
+  </data>
+  <data name="CmdTextEnabledFailure" xml:space="preserve">
+    <value>Failed to enable Command Line Processor (cmd.exe) on your device. Status = {0}</value>
+  </data>
   <data name="DisconnectButtonContent" xml:space="preserve">
     <value>Disconnect</value>
     <comment>This disconnects the connected network</comment>
+  </data>
+  <data name="VirtualNetworkAdapter" xml:space="preserve">
+    <value>Virtual Network Adapter</value>
+  </data>
+  <data name="CortanaAboutMeText" xml:space="preserve">
+    <value>About Me</value>
+    <comment>Button launches Cortana's "About Me" page to manage certain Cortana Settings</comment>
+  </data>
+  <data name="CortanaTitleText" xml:space="preserve">
+    <value>Manage Cortana Settings</value>
+    <comment>Title of Cortana Settings Management Page</comment>
+  </data>
+  <data name="CortanaPreferencesText" xml:space="preserve">
+    <value>Cortana</value>
+    <comment>Cortana Preferences on left side of settings screen</comment>
+  </data>
+  <data name="CortanaVoiceActivationText" xml:space="preserve">
+    <value>Let Cortana respond to "Hey Cortana"</value>
+    <comment>Toggle switch for enabling voice activation.</comment>
+  </data>
+  <data name="ToggleOnText" xml:space="preserve">
+    <value>On</value>
+    <comment>Text used in toggle switches for 'on' state.</comment>
+  </data>
+  <data name="ToggleOffText" xml:space="preserve">
+    <value>Off</value>
+    <comment>Text used in toggle switches for 'off' state.</comment>
   </data>
 </root>
